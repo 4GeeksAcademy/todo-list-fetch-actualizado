@@ -1,121 +1,129 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react"
 
-let apiUrl = "https://playground.4geeks.com/apis/fake/todos/user/alexander";
 
-export const Notes = () => {
-  const [addTodolist, setAddTodolist] = useState("");
-  const [todoList, setTodolist] = useState([]);
-  const [tareasPendientes, settareasPendientes] = useState("");
+const urlBase = "https://playground.4geeks.com/apis/fake/todos/user/alex"
 
-  const handleList = async (e) => {
-    if (e.key === "Enter" && addTodolist != "") {
-      let newTask = [...todoList, { label: e.target.value, done: false }];
-      const response = await fetch(apiUrl, {
-        method: "PUT",
-        body: JSON.stringify(newTask),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      setAddTodolist("");
-      if (response.ok) {
-        getTodoList();
-      }
+export const Note = () => {
+    const [taskList, setTaskList] = useState([])
+    const [task, setTask] = useState({})
+    
+    const getAllTasks = async() => {
+        try{
+            let response = await fetch(urlBase)
+            let data = await response.json()
+            
+            if(response.ok){
+                setTaskList(data)
+            }
+
+            if(response.status == 404){
+                createNewUser()
+            }
+
+        }catch(error){
+            console.log("error al traer los task")
+        }
     }
-  };
 
-  const deleteTask = (position) => {
-    let newTasks = todoList.filter((task, index) => index != position);
-    setTodolist(newTasks);
-  };
-
-  //POST - create User
-  const createUser = async () => {
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      body: JSON.stringify([]),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (response.ok) {
-      getTodoList();
+    const createNewUser = async() =>{
+        try {
+            let response = await fetch(urlBase, {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify([])
+            })
+            if(response.ok){
+                getAllTasks()
+            }
+            
+        } catch (error) {
+            console.log("error al crear usuario")
+        }
     }
-  };
 
-  // GET - get Todolist from User
-  const getTodoList = async () => {
-    const response = await fetch(apiUrl);
-    if (response.status == 404) {
-      createUser();
+    const handleChange = (event) =>{
+        setTask({
+            ...task,
+            [event.target.name]:event.target.value
+        })
     }
-    if (response.ok) {
-      const body = await response.json();
-      console.log(body);
-      setTodolist(body);
+
+    const saveTask = async(event) =>{
+        if(event.key == "Enter"){
+            try {
+                let response = await fetch(urlBase,{
+                    method:"PUT",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify([...taskList, task])
+                    
+                })
+                console.log(response)
+                if(response.ok){
+                    getAllTasks()
+                }
+            } catch (error) {
+                console.log("error guardar tareas")
+            }
+        }
     }
-  };
-  // DELETE - deletes user with all tasks
-  const deleteAll = async () => {
-    const response = await fetch(apiUrl, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (response.ok) {
-      const body = await response.json();
-      console.log(body);
-      createUser(body);
+
+    const deleteTask = async(id) =>{
+        let newTask = taskList.filter((item, index) => id != index)
+
+        try {
+            let response = await fetch(urlBase, {
+                method:"PUT",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify(newTask)
+            })
+            if(response.ok){
+                getAllTasks()
+            }
+        } catch (error) {
+            
+        }
     }
-  };
 
-  useEffect(() => {
-    getTodoList();
-  }, []);
 
-  return (
-    <div className="list-body">
-      <div className="lista">
-        <input
-          id="input_1"
-          onChange={(e) => setAddTodolist(e.target.value)}
-          onKeyDown={(e) => handleList(e)}
-          type="text"
-          placeholder="What need to be done?"
-          value={addTodolist}
-        />
 
-        <div className="row">
-          {todoList.map((todolist, index) => {
-            return (
-              <div className="Task" key={index}>
-                <span>{todolist.label}</span>
-                <button
-                  type="button"
-                  className="btn-close"
-                  aria-label="Close"
-                  onClick={() => {
-                    deleteTask(index);
-                  }}
-                ></button>
-              </div>
-            );
-          })}
-        </div>
+    useEffect(()=>{
+        getAllTasks()
+    }, [])
 
-        <div className="contador">
-          <>{tareasPendientes != "" ? "tareas por realizar" : ""}</>
-          {tareasPendientes}
-        </div>
-        <button
-          onClick={() => {
-            deleteAll();
-          }}
-        >
-          borrador
-        </button>
-      </div>
-    </div>
-  );
-};
+
+
+
+    return(
+        <>
+            <input 
+                placeholder="intruduce la tarea" 
+                name="label" 
+                value={task.label}
+                onChange={handleChange}
+                onKeyDown={saveTask}
+            />
+            
+
+
+            <ul>
+                {
+                    taskList.map((item, index)=>{
+                        return(
+                            <li key={index} onClick={() =>deleteTask(index)}>{item.label}</li>
+                        )
+                    })
+                    
+                }
+            </ul>
+        
+        </>
+
+
+    )
+}

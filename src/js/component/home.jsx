@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 // import { todoList } from "./lista.jsx";
 //include images into your bundle
 import rigoImage from "../../img/rigo-baby.jpg";
-import { Notes } from "./lista.jsx";
+import { Note } from "./lista";
 //create your first component
 const Home = () => {
   return (
@@ -10,7 +10,7 @@ const Home = () => {
       <div className="fondo-de-cartas">
         <h1 className="titulo">todos</h1>
         <div className="notas">
-          <Notes />
+          <Note/>
         </div>
       </div>
     </div>
